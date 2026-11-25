@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Vibe Check Saham &amp; Emas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ece9e2;
+        --surface: #f7f5ef;
+        --surface-alt: #e3ded2;
+        --text: #17181a;
+        --dim: #6d6a61;
+        --border: #d5d0c2;
+        --bull: #177a43;
+        --bear: #cf3238;
+        --neut: #a8740f;
+        --g-stocks: #1f3a5f;
+        --g-gold: #8a6d1f;
+        --g-crypto: #b25f06;
+        --g-indo: #9d2235;
+        --radius: 12px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0c0d0e;
+          --surface: #151617;
+          --surface-alt: #1e2022;
+          --text: #ece9e2;
+          --dim: #9a968c;
+          --border: #2a2b2e;
+          --bull: #30a46c;
+          --bear: #e5484d;
+          --neut: #f5b83d;
+          --g-stocks: #7ea4d8;
+          --g-gold: #d9b45b;
+          --g-crypto: #e08a3c;
+          --g-indo: #e0657a;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.5;
+      }
+      .font-display { font-family: "Archivo", system-ui, -apple-system, sans-serif; }
+      .font-num { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace; }
+      a { color: inherit; }
+      main { max-width: 48rem; margin: 0 auto; padding: 16px 16px 40px; }
+
+      /* Masthead */
+      .masthead {
+        margin: 0; padding: 12px 0 0 0.3em; text-align: center;
+        font-size: clamp(1.875rem, 6vw, 2.25rem); font-weight: 700;
+        letter-spacing: 0.3em; text-transform: uppercase; line-height: 1.25;
+      }
+      .masthead-sub {
+        margin: 4px 0 0; text-align: center; font-size: 0.875rem; font-weight: 700;
+        letter-spacing: 0.35em; text-transform: uppercase; color: var(--dim);
+      }
+
+      /* Top row */
+      .top-row { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      .top-row .stamp { font-size: 0.75rem; color: var(--dim); margin: 0; }
+      .snapshot-pill {
+        font-size: 0.8rem; font-weight: 700; border: 1px solid var(--border);
+        background: var(--surface); border-radius: 999px; padding: 6px 14px; white-space: nowrap;
+      }
+
+      /* Divergence panel */
+      .panel {
+        margin-top: 20px; border: 1px solid var(--border); border-radius: var(--radius);
+        background: var(--surface); padding: 8px 16px 4px;
+      }
+      .panel-kicker {
+        margin: 0; padding-top: 8px; text-align: center; font-size: 0.75rem; font-weight: 700;
+        letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim);
+      }
+      .panel-headline {
+        margin: 0; padding: 4px 8px; text-align: center;
+        font-size: clamp(1.5rem, 5.5vw, 1.875rem); font-weight: 900; line-height: 1.25;
+        letter-spacing: -0.01em; text-transform: uppercase;
+      }
+      .group-rows > .group-row + .group-row { border-top: 1px solid var(--border); }
+      .group-row { padding: 12px 0; }
+      .group-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+      .group-name { margin: 0; font-size: 0.875rem; font-weight: 800; letter-spacing: 0.025em; text-transform: uppercase; }
+      .dot { display: inline-block; width: 10px; height: 10px; border-radius: 999px; margin-right: 8px; }
+      .group-verdict { margin: 0; font-size: 0.875rem; text-align: right; }
+      .group-verdict .v { font-size: 1rem; font-weight: 800; text-transform: uppercase; }
+      .group-verdict .s { font-weight: 700; }
+      .group-count { margin: 6px 0 0; font-size: 11px; color: var(--dim); }
+      .narrative { margin: 0; padding: 4px 4px 8px; font-size: 0.875rem; line-height: 1.65; }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 4px 12px; }
+      .chip { background: var(--surface-alt); border-radius: 999px; padding: 4px 10px; font-size: 0.75rem; }
+      .chip strong { font-weight: 700; }
+
+      /* Score bar (diverging, −100..+100) */
+      .scorebar {
+        position: relative; height: 10px; width: 100%; border-radius: 999px;
+        background: var(--surface-alt); margin-top: 8px;
+      }
+      .scorebar .center {
+        position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
+        background: var(--dim); opacity: 0.6;
+      }
+      .scorebar .fill { position: absolute; top: 0; height: 100%; border-radius: 999px; }
+      .c-bull { background: var(--bull); color: var(--bull); }
+      .c-bear { background: var(--bear); color: var(--bear); }
+      .c-neut { background: var(--neut); color: var(--neut); }
+      .t-bull { color: var(--bull); } .t-bear { color: var(--bear); } .t-neut { color: var(--neut); }
+      .fill.t-bull, .fill.t-bear, .fill.t-neut { color: inherit; }
+
+      /* Sections */
+      section.group { margin-top: 32px; }
+      .group-title { margin: 0; font-size: 1.125rem; font-weight: 800; letter-spacing: 0.025em; text-transform: uppercase; }
+      .group-title .dot { width: 12px; height: 12px; }
+      .group-title .gscore { font-size: 0.875rem; font-weight: 700; text-transform: none; margin-left: 8px; vertical-align: middle; }
+      .group-note { margin: 4px 0 0; font-size: 0.875rem; color: var(--dim); }
+      .cards { margin-top: 12px; display: grid; gap: 12px; }
+      @media (min-width: 640px) { .cards { grid-template-columns: 1fr 1fr; } }
+
+      .card {
+        border: 1px solid var(--border); border-radius: var(--radius);
+        background: var(--surface); padding: 16px;
+      }
+      .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+      .card-name { margin: 0; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; color: var(--dim); }
+      .badge {
+        display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px;
+        font-weight: 700; letter-spacing: 0.05em; border: 1.5px solid; white-space: nowrap;
+        background: transparent;
+      }
+      .badge.t-bull { border-color: var(--bull); } .badge.t-bear { border-color: var(--bear); } .badge.t-neut { border-color: var(--neut); }
+      .card-verdict { margin: 8px 0 0; font-size: 1.25rem; font-weight: 800; line-height: 1.375; }
+      .card-score { margin-top: 8px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+      .card-score .s { font-size: 0.875rem; font-weight: 700; }
+      .card-score .m { font-size: 0.75rem; color: var(--dim); }
+      .card-evidence { margin: 12px 0 0; font-size: 0.875rem; line-height: 1.65; }
+      .card-source { margin: 12px 0 0; font-size: 0.75rem; color: var(--dim); }
+      .card-source a { text-decoration: underline; text-underline-offset: 2px; }
+
+      /* History */
+      .history-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+      .history-legend span { font-size: 11px; color: var(--dim); }
+      .history-legend .dot { width: 8px; height: 8px; margin-right: 6px; }
+      .history-days { display: flex; align-items: flex-end; gap: 6px; padding-bottom: 4px; }
+      .history-day { display: flex; min-width: 40px; flex-direction: column; align-items: center; gap: 4px; }
+      .history-bars { display: flex; height: 64px; align-items: flex-end; gap: 3px; }
+      .history-bars i { display: block; width: 7px; border-radius: 2px; }
+      .history-day .d { font-size: 10px; color: var(--dim); white-space: nowrap; }
+      .history-note { margin: 4px 0 0; font-size: 11px; color: var(--dim); }
+
+      footer {
+        margin-top: 40px; border-top: 1px solid var(--border); padding-top: 16px;
+        font-size: 0.75rem; line-height: 1.65; color: var(--dim);
+      }
+      footer p { margin: 0 0 8px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 class="masthead font-display">Vibe Check</h1>
+      <p class="masthead-sub font-display">Saham &amp; Emas</p>
+
+      <div class="top-row">
+        <p class="stamp font-num">Refresh terakhir 25 Nov, 07.13 WIB</p>
+        <span class="snapshot-pill font-display">Arsip Statis · 25 Nov 2026</span>
+      </div>
+
+      <!-- DIVERGENSI ANTAR-ASET -->
+      <section class="panel" aria-label="Divergensi antar-aset">
+        <p class="panel-kicker font-display">Divergensi Antar-Aset</p>
+        <h2 class="panel-headline font-display">Tidak Ada Divergensi Jelas</h2>
+
+        <div class="group-rows">
+          <div class="group-row">
+            <div class="group-top">
+              <p class="group-name font-display"><span class="dot" style="background: var(--g-stocks)"></span>Saham AS</p>
+              <p class="group-verdict font-num"><span class="v font-display t-bear">Bearish</span> <span class="s t-bear">-25</span></p>
+            </div>
+            <div class="scorebar" role="img" aria-label="Skor -25 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 37.5%; width: 12.5%"></span>
+            </div>
+            <p class="group-count font-num">6 dari 6 dimensi terbaca</p>
+          </div>
+
+          <div class="group-row">
+            <div class="group-top">
+              <p class="group-name font-display"><span class="dot" style="background: var(--g-gold)"></span>Emas</p>
+              <p class="group-verdict font-num"><span class="v font-display t-bear">Bearish</span> <span class="s t-bear">-29</span></p>
+            </div>
+            <div class="scorebar" role="img" aria-label="Skor -29 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 35.5%; width: 14.5%"></span>
+            </div>
+            <p class="group-count font-num">5 dari 5 dimensi terbaca</p>
+          </div>
+
+          <div class="group-row">
+            <div class="group-top">
+              <p class="group-name font-display"><span class="dot" style="background: var(--g-crypto)"></span>Crypto</p>
+              <p class="group-verdict font-num"><span class="v font-display t-bear">Bearish</span> <span class="s t-bear">-41</span></p>
+            </div>
+            <div class="scorebar" role="img" aria-label="Skor -41 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 29.5%; width: 20.5%"></span>
+            </div>
+            <p class="group-count font-num">3 dari 3 dimensi terbaca</p>
+          </div>
+
+          <div class="group-row">
+            <div class="group-top">
+              <p class="group-name font-display"><span class="dot" style="background: var(--g-indo)"></span>Saham Indonesia</p>
+              <p class="group-verdict font-num"><span class="v font-display t-neut">Cenderung Bearish</span> <span class="s t-neut">-12</span></p>
+            </div>
+            <div class="scorebar" role="img" aria-label="Skor -12 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-neut" style="left: 44%; width: 6%"></span>
+            </div>
+            <p class="group-count font-num">11 dari 11 dimensi terbaca</p>
+          </div>
+        </div>
+
+        <p class="narrative">Selisih skor antargrup masih di bawah ambang 25 poin: Saham AS (-25), emas (-29), crypto (-41), dan saham Indonesia (-12). Semuanya bergerak relatif seirama — belum ada cerita &quot;satu reli, yang lain ditinggal&quot; pada bacaan kali ini.</p>
+
+        <div class="chips font-num">
+          <span class="chip">Saham − Crypto <strong class="t-bull">+16</strong></span>
+          <span class="chip">Emas − Crypto <strong class="t-neut">+12</strong></span>
+          <span class="chip">Saham − Emas <strong class="t-neut">+4</strong></span>
+          <span class="chip">Indonesia − Saham AS <strong class="t-neut">+13</strong></span>
+          <span class="chip">Indonesia − Emas <strong class="t-bull">+17</strong></span>
+          <span class="chip">Indonesia − Crypto <strong class="t-bull">+29</strong></span>
+        </div>
+      </section>
+
+      <!-- SAHAM AS -->
+      <section class="group" aria-label="Saham AS">
+        <h2 class="group-title font-display"><span class="dot" style="background: var(--g-stocks)"></span>Saham AS<span class="gscore font-num t-bear">-25</span></h2>
+        <div class="cards">
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">The Fed</h3>
+              <span class="badge font-display t-bear">BEARISH</span>
+            </div>
+            <p class="card-verdict font-display">Hawkish — Pasar Perkirakan Kenaikan Desember</p>
+            <div class="card-score"><span class="s font-num t-bear">-50</span></div>
+            <div class="scorebar" role="img" aria-label="Skor -50 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 25%; width: 25%"></span>
+            </div>
+            <p class="card-evidence">FOMC 28 Okt 2026 menahan suku bunga di 3,75–4,00% dengan suara 10–2; dua anggota (Cook dan Hammack) justru menginginkan kenaikan 25 bps, setelah kenaikan 25 bps pada 16 Sep 2026, dan Ketua Warsh menegaskan inflasi masih tinggi sementara aktivitas ekonomi berekspansi kuat. Pasar per 23–24 Nov 2026 memperkirakan peluang sekitar 97–99% kenaikan 25 bps pada pertemuan 9 Des 2026 (metode CME FedWatch, peluang cut 0%), dan ekspektasi kenaikan ini menekan emas hingga turun sekitar 2,3% pada 24 Nov ke kisaran $3.553/oz. QT sudah berakhir 1 Des 2025 dan diganti pembelian surat utang jangka pendek untuk menjaga cadangan (reserve management purchases, bukan QE), sehingga beban likuiditas berkurang tetapi arah suku bunga tetap hawkish bagi saham.</p>
+            <p class="card-source"><a href="https://www.federalreserve.gov/monetarypolicy/files/monetary20261028a1.pdf" target="_blank" rel="noreferrer">Federal Reserve</a> · diperbarui 25 Nov, 07.15 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Tren S&amp;P 500 &amp; Nasdaq</h3>
+              <span class="badge font-display t-bear">BEARISH</span>
+            </div>
+            <p class="card-verdict font-display">Tren Turun Kuat</p>
+            <div class="card-score"><span class="s font-num t-bear">-53</span><span class="m font-num">S&amp;P 500 7,201 · 1B -6.2% · Nasdaq 23,734 · 1B -9.3%</span></div>
+            <div class="scorebar" role="img" aria-label="Skor -53 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 23.5%; width: 26.5%"></span>
+            </div>
+            <p class="card-evidence">S&amp;P 500 di 7,201.09 (-6.2% dalam ±1 bulan, di bawah MA200 7,351) dan Nasdaq Composite di 23,733.54 (-9.3% dalam ±1 bulan, di bawah MA200 25,165). Posisi harga terhadap MA50/MA200 dan momentum 7/30 hari menentukan skor tren kedua indeks acuan saham AS ini.</p>
+            <p class="card-source"><a href="https://finance.yahoo.com/quote/%5EGSPC/" target="_blank" rel="noreferrer">Yahoo Finance</a> · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Big Tech &amp; AI</h3>
+              <span class="badge font-display t-bear">BEARISH</span>
+            </div>
+            <p class="card-verdict font-display">Big Tech Tertekan Berat</p>
+            <div class="card-score"><span class="s font-num t-bear">-29</span><span class="m font-num">Rata-rata 1B -7.3% · 2/7 menghijau</span></div>
+            <div class="scorebar" role="img" aria-label="Skor -29 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 35.5%; width: 14.5%"></span>
+            </div>
+            <p class="card-evidence">Perubahan harga ±1 bulan terakhir tujuh saham teknologi terbesar: Nvidia -28.1%, Google -11.9%, Apple +3.0%, Microsoft -6.8%, Amazon +1.3%, Meta -6.5%, Tesla -1.8%. Rata-rata -7.3%; 2 dari 7 saham menghijau — terkuat Apple (+3.0%), terlemah Nvidia (-28.1%). Kelompok ini adalah motor indeks AS dan barometer tema AI: reli mereka mengangkat seluruh pasar, koreksi mereka menekan selera risiko global.</p>
+            <p class="card-source">Yahoo Finance · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Volatilitas (VIX)</h3>
+              <span class="badge font-display t-bear">BEARISH</span>
+            </div>
+            <p class="card-verdict font-display">VIX 26.36</p>
+            <div class="card-score"><span class="s font-num t-bear">-40</span><span class="m font-num">VIX 26.36 · -1.0%</span></div>
+            <div class="scorebar" role="img" aria-label="Skor -40 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 30%; width: 20%"></span>
+            </div>
+            <p class="card-evidence">Indeks volatilitas S&amp;P 500 (VIX) di 26.36 (-1.0% dari penutupan sebelumnya) — masuk zona ketakutan tinggi (25–30). Di halaman ini VIX dibaca dari sudut pandang pasar saham itu sendiri: VIX tinggi berarti pelaku saham sedang takut dan membayar mahal untuk perlindungan, VIX rendah berarti pasar tenang.</p>
+            <p class="card-source"><a href="https://finance.yahoo.com/quote/%5EVIX/" target="_blank" rel="noreferrer">Yahoo Finance (CBOE VIX)</a> · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Breadth Pasar</h3>
+              <span class="badge font-display t-bull">BULLISH</span>
+            </div>
+            <p class="card-verdict font-display">Breadth Relatif Kuat di Tengah Koreksi</p>
+            <div class="card-score"><span class="s font-num t-bull">+55</span><span class="m font-num">RSP 1B -1.5% · SPY 1B -6.1% · Selisih +4.6%</span></div>
+            <div class="scorebar" role="img" aria-label="Skor +55 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bull" style="left: 50%; width: 27.5%"></span>
+            </div>
+            <p class="card-evidence">Dalam ±1 bulan terakhir, ETF equal-weight S&amp;P 500 (RSP, semua saham berbobot sama) bergerak -1.5% vs SPY (bobot kapitalisasi) -6.1% — selisih +4.6%. Di pasar yang sedang turun, RSP yang mengungguli SPY berarti koreksi lebih terkonsentrasi di saham-saham raksasa, sedangkan SPY yang jauh mengungguli RSP berarti saham rata-rata jatuh lebih dalam daripada indeks — koreksinya merata dan breadth-nya buruk.</p>
+            <p class="card-source">Yahoo Finance (RSP vs SPY) · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Yield Obligasi AS</h3>
+              <span class="badge font-display t-neut">NETRAL</span>
+            </div>
+            <p class="card-verdict font-display">Yield Stabil</p>
+            <div class="card-score"><span class="s font-num t-neut">+10</span><span class="m font-num">Yield 10Y 4.90% · 1B -8 bps</span></div>
+            <div class="scorebar" role="img" aria-label="Skor +10 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-neut" style="left: 50%; width: 5%"></span>
+            </div>
+            <p class="card-evidence">Imbal hasil obligasi pemerintah AS tenor 10 tahun di 4.90% (-8 bps dalam ±1 bulan). Yield yang naik mengetatkan kondisi keuangan dan menekan valuasi saham (terutama teknologi), yield yang turun memberi ruang bernapas bagi aset risiko — dan juga bagi emas.</p>
+            <p class="card-source"><a href="https://finance.yahoo.com/quote/%5ETNX/" target="_blank" rel="noreferrer">Yahoo Finance (CBOE ^TNX)</a> · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- EMAS -->
+      <section class="group" aria-label="Emas">
+        <h2 class="group-title font-display"><span class="dot" style="background: var(--g-gold)"></span>Emas<span class="gscore font-num t-bear">-29</span></h2>
+        <p class="group-note">Skor grup Emas juga memperhitungkan The Fed (di bagian Saham AS di atas), karena kebijakan Fed menggerakkan emas sama kuatnya.</p>
+        <div class="cards">
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Tren Emas</h3>
+              <span class="badge font-display t-bear">BEARISH</span>
+            </div>
+            <p class="card-verdict font-display">Tren Turun Kuat</p>
+            <div class="card-score"><span class="s font-num t-bear">-75</span><span class="m font-num">Emas $3,551 · 1P -8.1% · 1B -12.1%</span></div>
+            <div class="scorebar" role="img" aria-label="Skor -75 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 12.5%; width: 37.5%"></span>
+            </div>
+            <p class="card-evidence">Emas (futures GC=F) di $3,551 per troy ounce (-8.1% dalam ±1 pekan, -12.1% dalam ±1 bulan). Harga berada di bawah MA50 ($4,081) dan di bawah MA200 ($4,430) — skor tren murni dari struktur harga emas itu sendiri, sebelum faktor dolar dan real yield dinilai di dimensi lain.</p>
+            <p class="card-source"><a href="https://finance.yahoo.com/quote/GC%3DF/" target="_blank" rel="noreferrer">Yahoo Finance (GC=F)</a> · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Real Yield AS</h3>
+              <span class="badge font-display t-bear">BEARISH</span>
+            </div>
+            <p class="card-verdict font-display">Real Yield Cenderung Naik</p>
+            <div class="card-score"><span class="s font-num t-bear">-28</span><span class="m font-num">Real yield 2.79% · 1B +0.13pp</span></div>
+            <div class="scorebar" role="img" aria-label="Skor -28 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 36%; width: 14%"></span>
+            </div>
+            <p class="card-evidence">Real yield obligasi AS 10 tahun yang dilindungi inflasi (TIPS, seri FRED DFII10) di 2.79% per 2026-11-23 (+0.13 poin persentase dalam ±1 bulan). Emas tidak membayar kupon, jadi real yield adalah biaya peluang memegangnya: real yield naik membuat emas kurang menarik, real yield turun membuat emas bersinar.</p>
+            <p class="card-source"><a href="https://fred.stlouisfed.org/series/DFII10" target="_blank" rel="noreferrer">FRED (DFII10)</a> · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Dolar AS (DXY)</h3>
+              <span class="badge font-display t-bear">BEARISH</span>
+            </div>
+            <p class="card-verdict font-display">Dolar Menguat Kuat — Tekanan untuk Emas</p>
+            <div class="card-score"><span class="s font-num t-bear">-15</span><span class="m font-num">DXY 103.85 · 1B +1.9%</span></div>
+            <div class="scorebar" role="img" aria-label="Skor -15 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 42.5%; width: 7.5%"></span>
+            </div>
+            <p class="card-evidence">Indeks dolar AS (DXY) di 103.85 (+0.3% dalam ±1 pekan, +1.9% dalam ±1 bulan). Emas dihargai dalam dolar: dolar yang menguat membuat emas lebih mahal bagi pemegang mata uang lain dan biasanya menekan harganya, dolar yang melemah memberi dorongan. Skor dimensi ini dibaca dari sudut pandang emas.</p>
+            <p class="card-source"><a href="https://finance.yahoo.com/quote/DX-Y.NYB/" target="_blank" rel="noreferrer">Yahoo Finance (DXY)</a> · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Bank Sentral &amp; Safe Haven</h3>
+              <span class="badge font-display t-bull">BULLISH</span>
+            </div>
+            <p class="card-verdict font-display">Bank Sentral Agresif Membeli Emas</p>
+            <div class="card-score"><span class="s font-num t-bull">+50</span></div>
+            <div class="scorebar" role="img" aria-label="Skor +50 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bull" style="left: 50%; width: 25%"></span>
+            </div>
+            <p class="card-evidence">Bank sentral membeli 321 ton emas pada Q3 2026, naik 42% year-on-year, dan pada Okt 2026 China menambah 26 ton (bulan ke-24 berturut-turut, cadangan 2.435 ton), Polandia 27 ton hingga mencapai target 700 ton, serta Uzbekistan 7 ton; World Gold Council memperkirakan permintaan bank sentral 2026 setidaknya menyamai 2025. ETF emas global menambah US$2,7 miliar pada Okt 2026, bulan keempat berturut-turut inflow, dengan kepemilikan rekor 4.275 ton. Namun harga emas terkoreksi tajam — turun 6,3% pada Okt ke $3.913 dan jatuh ke sekitar $3.553/oz pada 24 Nov 2026 — karena ekspektasi kenaikan suku bunga The Fed dan dolar yang menguat, sehingga skor tidak maksimal.</p>
+            <p class="card-source"><a href="https://www.gold.org/goldhub/research/gold-etfs-holdings-and-flows/2026/11" target="_blank" rel="noreferrer">World Gold Council</a> · diperbarui 25 Nov, 07.15 WIB</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- CRYPTO PEMBANDING -->
+      <section class="group" aria-label="Crypto pembanding">
+        <h2 class="group-title font-display"><span class="dot" style="background: var(--g-crypto)"></span>Crypto — Pembanding<span class="gscore font-num t-bear">-41</span></h2>
+        <p class="group-note">Sisi crypto dari perbandingan — dihitung dengan metode yang sama seperti di Vibe Check crypto.</p>
+        <div class="cards">
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Harga &amp; Momentum BTC</h3>
+              <span class="badge font-display t-bear">BEARISH</span>
+            </div>
+            <p class="card-verdict font-display">Tren Turun Kuat</p>
+            <div class="card-score"><span class="s font-num t-bear">-48</span><span class="m font-num">BTC $59,550 · 24j -0.5% · 7h -5.6%</span></div>
+            <div class="scorebar" role="img" aria-label="Skor -48 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 26%; width: 24%"></span>
+            </div>
+            <p class="card-evidence">BTC di $59,550 (-0.5% dalam 24 jam, -5.6% dalam 7 hari). Harga berada di bawah MA50 ($75,218) dan di bawah MA200 ($72,084). Dimensi ini adalah sisi crypto dari perbandingan divergensi — dihitung dengan metode yang sama seperti di Vibe Check crypto.</p>
+            <p class="card-source"><a href="https://www.binance.com/en/trade/BTC_USDT" target="_blank" rel="noreferrer">Binance Spot</a> · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Altcoin Season / Dominasi BTC</h3>
+              <span class="badge font-display t-neut">NETRAL</span>
+            </div>
+            <p class="card-verdict font-display">Netral — Belum Ada Season (52/100)</p>
+            <div class="card-score"><span class="s font-num t-neut">+2</span><span class="m font-num">Indeks 52/100 · 7h -3 · Dominasi BTC 58.6%</span></div>
+            <div class="scorebar" role="img" aria-label="Skor +2 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-neut" style="left: 50%; width: 1%"></span>
+            </div>
+            <p class="card-evidence">Altcoin Season Index di 52 dari 100 (-3 poin dalam 7 hari, -1 poin dalam 30 hari) — indeks ini menghitung berapa banyak dari 100 koin teratas yang mengalahkan BTC dalam 90 hari; ≥75 = altcoin season, ≤25 = bitcoin season. Dominasi BTC saat ini 58.6% dari total kapitalisasi pasar crypto. Ini sisi altcoin dari perbandingan divergensi: saham/emas bisa reli sementara indeks ini tetap rendah bila uang belum berotasi keluar dari BTC.</p>
+            <p class="card-source"><a href="https://coinmarketcap.com/charts/altcoin-season-index/" target="_blank" rel="noreferrer">CoinMarketCap</a> · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3 class="card-name font-display">Fear &amp; Greed Crypto</h3>
+              <span class="badge font-display t-bear">BEARISH</span>
+            </div>
+            <p class="card-verdict font-display">Ketakutan Ekstrem (13/100)</p>
+            <div class="card-score"><span class="s font-num t-bear">-74</span><span class="m font-num">F&amp;G 13/100 · kemarin 11</span></div>
+            <div class="scorebar" role="img" aria-label="Skor -74 dari minus 100 sampai plus 100">
+              <span class="center"></span><span class="fill c-bear" style="left: 13%; width: 37%"></span>
+            </div>
+            <p class="card-evidence">Indeks Fear &amp; Greed Crypto berada di 13 dari 100 — zona Extreme Fear. Kemarin di 11. Angka ini merangkum volatilitas, momentum, dominasi BTC, dan sentimen sosial menurut Alternative.me, dan menjadi penyeimbang sentimen untuk sisi crypto.</p>
+            <p class="card-source"><a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noreferrer">Alternative.me</a> · diperbarui 25 Nov, 07.13 WIB</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- RIWAYAT -->
+      <section class="group" aria-label="Riwayat skor per grup">
+        <h2 class="group-title font-display">Riwayat Skor per Grup</h2>
+        <div style="margin-top: 12px">
+          <div class="history-legend font-num">
+            <span><span class="dot" style="background: var(--g-stocks)"></span>Saham AS</span>
+            <span><span class="dot" style="background: var(--g-gold)"></span>Emas</span>
+            <span><span class="dot" style="background: var(--g-crypto)"></span>Crypto</span>
+          </div>
+          <div class="history-days">
+            <div class="history-day" title="2026-11-24 — Saham -27, Emas -30, Crypto -42">
+              <div class="history-bars">
+                <i class="c-bear" style="height: 16px"></i>
+                <i class="c-bear" style="height: 18px"></i>
+                <i class="c-bear" style="height: 25px"></i>
+              </div>
+              <span class="d font-num">11-24</span>
+            </div>
+            <div class="history-day" title="2026-11-25 — Saham -25, Emas -29, Crypto -41">
+              <div class="history-bars">
+                <i class="c-bear" style="height: 15px"></i>
+                <i class="c-bear" style="height: 17px"></i>
+                <i class="c-bear" style="height: 25px"></i>
+              </div>
+              <span class="d font-num">11-25</span>
+            </div>
+          </div>
+          <p class="history-note">Tinggi batang = kekuatan skor hari itu; warna mengikuti arah (hijau bullish, merah bearish, kuning netral).</p>
+        </div>
+      </section>
+
+      <footer>
+        <p>Setiap grup dinilai pada skala yang sama (−100 sangat bearish s.d. +100 sangat bullish) dari rata-rata tertimbang dimensinya, sehingga keempatnya bisa dibandingkan langsung. The Fed ikut dihitung di skor Saham AS dan Emas. Skor Saham Indonesia tidak dihitung di halaman ini — skornya disalin apa adanya dari dashboard Vibe Check Saham Indonesia edisi terbaru (11 dimensi IHSG) pada refresh 25 November 2026. Divergensi dinyatakan jelas bila selisih skor antargrup mencapai 25 poin. Dimensi data (tren indeks &amp; emas, big tech, VIX, breadth RSP vs SPY, yield obligasi, real yield FRED, DXY, momentum BTC, altcoin season, Fear &amp; Greed) dihitung dari API publik dengan aturan tetap; dimensi riset (The Fed, Bank Sentral &amp; Safe Haven) dinilai dari berita/data terbaru tiap refresh dan selalu membawa bukti + sumbernya. Data saham &amp; emas adalah penutupan sesi AS terakhir yang tersedia. Bukan saran investasi.</p>
+        <p>Halaman ini adalah arsip statis Vibe Check Saham &amp; Emas per 25 November 2026 (refresh terakhir 07.13 WIB) — angkanya tidak berubah sampai edisi baru diterbitkan.</p>
+      </footer>
+    </main>
+  </body>
+</html>
